@@ -420,53 +420,6 @@ body {
   .header { flex-direction: column; align-items: flex-start; }
   .header-controls { width: 100%; justify-content: flex-start; }
 }
-
-/* 台风影响标记 */
-.typhoon-flag {
-    display: inline-block;
-    animation: flagWave 1.5s ease-in-out infinite;
-    font-size: 14px;
-}
-@keyframes flagWave {
-    0%, 100% { transform: rotate(-5deg); }
-    50% { transform: rotate(5deg); }
-}
-.typhoon-banner {
-    background: linear-gradient(135deg, #1e3a5f, #2563eb);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-.typhoon-banner .typhoon-icon {
-    font-size: 24px;
-    animation: spin 3s linear infinite;
-}
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-.prop-item.typhoon-affected {
-    border-left: 3px solid #2563eb;
-    background: rgba(37, 99, 235, 0.08);
-}
-
-/* 台风影响城市地图标记 */
-.city-marker.typhoon-city .inner {
-    fill: #2563eb !important;
-}
-.city-marker.typhoon-city .marker-ring {
-    stroke: rgba(37,99,235,0.9) !important;
-    stroke-width: 2 !important;
-}
-.typhoon-glow {
-    fill: rgba(37,99,235,0.5);
-}
 </style>
 </head>
 <body>
@@ -496,34 +449,7 @@ body {
   </div>
 </header>
 
-<div class="typhoon-banner" id="typhoonBanner">
-    <span class="typhoon-icon">🌀</span>
-    <div style="flex:1">
-        <div style="font-size:15px;font-weight:600">台风蓝色预警 | 南海热带低压将于7月3日登陆海南，7月4日登陆广西</div>
-        <div style="font-size:12px;font-weight:400;opacity:0.9;margin-top:3px">
-            影响建发房地产标的：广东14条 | 广西11条 | 湖南11条 | 贵州2条，共38条（🚩标记）
-        </div>
-    </div>
-    <button onclick="document.getElementById('typhoonBanner').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap">关闭 ✕</button>
-</div>
-
 <div class="main-container">
-
-<div class="typhoon-stats" id="typhoonStats" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);color:white;padding:15px 20px;border-radius:10px;margin:15px 20px;box-shadow:0 4px 12px rgba(37,99,235,0.3)">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:22px">🌀</span>
-        <span style="font-size:16px;font-weight:600">台风影响标的统计</span>
-        <span style="font-size:12px;opacity:0.8;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:10px">2026-07-02 08时</span>
-    </div>
-    <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:14px">
-        <div>📊 <strong>受影响标的</strong>: 38条 / 257条 (14.8%)</div>
-        <div>🔴 <strong>高危区域</strong>: 广东14条、广西11条</div>
-        <div>🟡 <strong>关注区域</strong>: 湖南11条、贵州2条</div>
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.2);font-size:13px;opacity:0.9">
-        📌 台风路径：海南岛东部登陆(10-11级) → 北部湾 → 广西/越南沿海二次登陆(8-9级) | 影响时间：7月3日-5日
-    </div>
-</div>
   <section class="map-section">
     <div class="map-container">
       <svg id="chinaMap" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
@@ -643,6 +569,9 @@ body {
 </div>
 
 <script>
+// 台风影响城市标记（2026年7月2日）
+const TYPHOON_AFFECTED_CITIES = ["东莞","佛山","广州","江门","珠海","南宁","柳州","株洲","益阳","长沙","贵阳"];
+
 // ========== 配置（硬编码） ==========
 const API_KEY = 'a5866b39daa944138c7aaaa6df596be0';
 const API_DOMAIN = 'mc67cfme6v.re.qweatherapi.com';
@@ -994,25 +923,9 @@ function renderCityMarkers() {
     const isSelected = selectedMarkerCity === cityName;
     
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    const isTyphoonAffected = TYPHOON_AFFECTED_CITIES.includes(cityName);
-    g.setAttribute('class', `city-marker ${hasWarning ? 'has-warning' : ''} ${isSelected ? 'selected' : ''} ${isTyphoonAffected ? 'typhoon-city' : ''}`);
+    g.setAttribute('class', `city-marker ${hasWarning ? 'has-warning' : ''} ${isSelected ? 'selected' : ''}`);
     g.setAttribute('data-city', cityName);
     g.setAttribute('transform', `translate(${pos.sx}, ${pos.sy})`);
-    
-    // 台风影响蓝色光晕
-    if (isTyphoonAffected && !hasWarning) {
-      const typhoonGlow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      typhoonGlow.setAttribute('class', 'marker-glow typhoon-glow');
-      typhoonGlow.setAttribute('cx', 0);
-      typhoonGlow.setAttribute('cy', 0);
-      typhoonGlow.setAttribute('r', 0);
-      typhoonGlow.setAttribute('fill', 'rgba(37,99,235,0.6)');
-      if (!isSelected) {
-        typhoonGlow.innerHTML = `<animate attributeName="r" from="0" to="12" dur="2s" repeatCount="indefinite"/>
-                          <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite"/>`;
-      }
-      g.appendChild(typhoonGlow);
-    }
     
     // 外圈光晕
     if (hasWarning) {
@@ -1039,7 +952,7 @@ function renderCityMarkers() {
     ring.setAttribute('cy', 0);
     ring.setAttribute('r', size + 2);
     ring.setAttribute('fill', 'rgba(59,130,246,0.15)');
-    ring.setAttribute('stroke', isSelected ? '#06B6D4' : (hasWarning ? 'rgba(249,115,22,0.7)' : (isTyphoonAffected ? 'rgba(37,99,235,0.9)' : 'rgba(59,130,246,0.5)')));
+    ring.setAttribute('stroke', isSelected ? '#06B6D4' : (hasWarning ? 'rgba(249,115,22,0.7)' : 'rgba(59,130,246,0.5)'));
     ring.setAttribute('stroke-width', isSelected ? 3 : 1.5);
     g.appendChild(ring);
     
@@ -1065,14 +978,14 @@ function renderCityMarkers() {
     text.textContent = cityName;
     g.appendChild(text);
     
-    // 台风影响城市添加蓝色旗子🚩
-    if (isTyphoonAffected) {
-      const flagText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      flagText.setAttribute('x', size + 4);
-      flagText.setAttribute('y', -size - 2);
-      flagText.setAttribute('font-size', '10');
-      flagText.textContent = '🚩';
-      g.appendChild(flagText);
+    // 台风影响城市蓝色旗子
+    if (TYPHOON_AFFECTED_CITIES.includes(cityName)) {
+      const flag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      flag.setAttribute('x', size + 3);
+      flag.setAttribute('y', -size - 1);
+      flag.setAttribute('font-size', '9');
+      flag.textContent = '🚩';
+      g.appendChild(flag);
     }
     
     // 鼠标事件
@@ -1096,8 +1009,6 @@ function renderCityList() {
     const bAllWarnings = getAllWarningsForCity(b);
     const aHasWarning = aAllWarnings.length > 0;
     const bHasWarning = bAllWarnings.length > 0;
-    const aTyphoon = TYPHOON_AFFECTED_CITIES.includes(a);
-    const bTyphoon = TYPHOON_AFFECTED_CITIES.includes(b);
     
     if (aHasWarning && !bHasWarning) return -1;
     if (!aHasWarning && bHasWarning) return 1;
@@ -1105,13 +1016,8 @@ function renderCityList() {
     if (aHasWarning && bHasWarning) {
       const aSeverity = getMaxSeverity(aAllWarnings);
       const bSeverity = getMaxSeverity(bAllWarnings);
-      if (severityRank(bSeverity) !== severityRank(aSeverity))
-        return severityRank(bSeverity) - severityRank(aSeverity);
+      return severityRank(bSeverity) - severityRank(aSeverity);
     }
-    
-    // 台风影响城市优先
-    if (aTyphoon && !bTyphoon) return -1;
-    if (!aTyphoon && bTyphoon) return 1;
     
     return 0;
   });
@@ -1167,7 +1073,6 @@ function renderCityList() {
         <span class="city-name">
           ${cityName}
           <span class="city-count">${filteredProps.length}标的</span>
-          ${TYPHOON_AFFECTED_CITIES.includes(cityName) ? '<span class="typhoon-badge" title="受台风影响">🔵台风影响</span>' : ''}
           ${warningTags}
         </span>
       </div>
@@ -1179,8 +1084,8 @@ function renderCityList() {
       ${forecastSection}
       <div class="prop-list" data-city="${cityName}">
         ${filteredProps.map((p, idx) => `
-          <div class="prop-item ${TYPHOON_AFFECTED_PROPS.includes(p.insured) ? 'typhoon-affected' : ''}" data-idx="${idx}" style="${idx >= 5 ? 'display:none' : ''}">
-            ${TYPHOON_AFFECTED_PROPS.includes(p.insured) ? '<span class="typhoon-flag" title="受台风影响">🚩</span> ' : ''}<span class="prop-segment">[${p.segment}]</span> <span class="prop-org">[${p.org}]</span> ${p.insured}
+          <div class="prop-item" data-idx="${idx}" style="${idx >= 5 ? 'display:none' : ''}">
+            <span class="prop-segment">[${p.segment}]</span> <span class="prop-org">[${p.org}]</span> ${p.insured}
             <br>&nbsp;&nbsp;&nbsp;📍 ${p.addr}
           </div>
         `).join('')}
@@ -2092,12 +1997,6 @@ function init() {
 
 // 启动
 init();
-
-
-// 台风影响标的标记（2026年7月2日）
-const TYPHOON_AFFECTED_CITIES = ["东莞","佛山","广州","江门","珠海","南宁","柳州","株洲","益阳","长沙","贵阳"];
-const TYPHOON_AFFECTED_PROPS = ["东莞市兆禧房地产开发有限公司","佛山市兆祥房地产开发有限公司","佛山市兆裕房地产开发有限公司","佛山市悦发房地产开发有限公司","佛山市悦福房地产开发有限公司","佛山市兆悦房地产开发有限公司","广州市兆恒房地产开发有限公司","佛山市兆祥房地产开发有限公司","广州建穗房地产开发有限公司","广州市兆悦房地产开发有限公司","深圳兆悦房地产开发有限公司","江门市骏腾房地产开发有限公司","珠海斗门益发置业有限公司","珠海悦发置业有限公司","南宁裕丰房地产开发有限公司","广西南宁百益商贸有限公司","南宁金裕丰商业服务有限公司","南宁兆悦房地产开发有限公司","南宁市鼎驰置业投资有限责任公司","南宁兆荣房地产开发有限公司","南宁兆祥房地产开发有限公司","南宁兆润房地产开发有限公司","南宁兆盛房地产开发有限公司","南宁兆盈房地产开发有限公司","柳州兆宸房地产开发有限公司","株洲悦发房地产有限公司","益阳悦发房地产有限公司","长沙兆欣房地产有限公司","长沙兆辰房地产有限公司","长沙兆顺房地产有限公司","长沙兆禧房地产有限公司","长沙兆泽房地产有限公司","长沙兆祥房地产有限公司","中交（长沙）置业有限公司","长沙展图房地产开发有限公司","长沙兆瑞房地产有限公司","贵州瑞铭房地产开发有限公司","贵州浩宇房地产开发有限公司"];
-
 </script>
 </body>
 </html>
