@@ -1065,6 +1065,16 @@ function renderCityMarkers() {
     text.textContent = cityName;
     g.appendChild(text);
     
+    // 台风影响城市添加蓝色旗子🚩
+    if (isTyphoonAffected) {
+      const flagText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      flagText.setAttribute('x', size + 4);
+      flagText.setAttribute('y', -size - 2);
+      flagText.setAttribute('font-size', '10');
+      flagText.textContent = '🚩';
+      g.appendChild(flagText);
+    }
+    
     // 鼠标事件
     g.addEventListener('mouseenter', (e) => showTooltip(e, cityName));
     g.addEventListener('mouseleave', hideTooltip);
